@@ -20,7 +20,7 @@ class BootSector{
         BYTE OEMName[8];
         BYTE BytesPerSector[2];
         BYTE SectorsPerCluster;
-        BYTE ReservedSectors[2];
+        BYTE SectorBeforeFat[2];
         BYTE NumberOfFATs;
         BYTE RootEntries[2];
         BYTE TotalSectors16[2];
@@ -38,4 +38,17 @@ class BootSector{
         BYTE FileSystemType[8];
         BYTE BootCode[448];
 
+        int BytesPerSectorInt;
+        int SectorsPerClusterInt;
+        int SectorBeforeFatInt;
+        int NumberOfFATsInt;
+        int RootEntriesInt;
+        int TotalSectors16Int;
+        int SectorsPerFATInt;
+        int SectorsPerTrackInt;
+        int NumberOfHeadsInt;
+        int HiddenSectorsInt;
+        int TotalSectors32Int;
+        int PhysicalDriveNumberInt;
+        int ReservedInt;
 };
