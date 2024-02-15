@@ -2,7 +2,6 @@
 
 int main() {
     Program program;
-    program.bootSector.ReadBootSector();
-    program.bootSector.DisplayBootSector();
+    program.run();
     return 0;
 }
