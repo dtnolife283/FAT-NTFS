@@ -1,13 +1,6 @@
 #include "BootSector.h"
 
-// Open disk
-BootSector::BootSector() {
-    hDevice = CreateFileW(L"\\\\.\\D:", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-    if (hDevice == INVALID_HANDLE_VALUE) {
-        cerr << "Failed to open disk device" << endl;
-        exit(1);
-    }
-}
+
 
 // Close disk
 BootSector::~BootSector() {
@@ -15,7 +8,19 @@ BootSector::~BootSector() {
 }
 
 // Read boot sector
-void BootSector::ReadBootSector() {
+void BootSector::ReadBootSector(string path) {
+    string diskPath = "\\\\.\\";
+    diskPath += path + ":";
+
+    // Convert diskPath to wide character string
+    wstring wdPath(diskPath.begin(), diskPath.end());
+    hDevice = CreateFileW(wdPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (hDevice == INVALID_HANDLE_VALUE) {
+        cerr << "Failed to open disk device" << endl;
+        exit(1);
+    }
+
     bResult = ReadFile(hDevice, bBootSector, sizeof(bBootSector), &dwBytesRead, NULL);
     if (!bResult || dwBytesRead != sizeof(bBootSector)) {
         cerr << "Failed to read boot sector" << endl;
@@ -97,4 +102,54 @@ void BootSector::DisplayBootSector(){
     cout << "FSInfo: " << FSInfoInt << endl;
     cout << "Backup boot sector: " << BackupBootSectorInt << endl;
     cout << "Physical drive number: " << PhysicalDriveNumberInt << endl;    
+}
+
+// Read FAT
+std::vector<uint32_t> BootSector::ReadFAT() {
+    uint64_t fatOffset = SectorBeforeFatInt * BytesPerSectorInt;
+
+    // Seek to the beginning of the FAT area
+    LARGE_INTEGER liOffset;
+    liOffset.QuadPart = fatOffset;
+    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN)) {
+        cerr << "Failed to seek to FAT area" << endl;
+        exit(1);
+    }
+
+    // Read the FAT entries
+    DWORD bytesToRead = NumberOfFATsInt * SectorsPerFATInt * BytesPerSectorInt;
+    std::vector<uint8_t> fatData(bytesToRead);
+    DWORD bytesRead;
+    if (!ReadFile(hDevice, fatData.data(), bytesToRead, &bytesRead, NULL) || bytesRead != bytesToRead) {
+        cerr << "Failed to read FAT" << endl;
+        exit(1);
+    }
+
+    // Process FAT entries
+    vector<uint32_t> fatEntries;
+    for (size_t i = 0; i < fatData.size(); i += 4) {
+        uint32_t fatEntry = *reinterpret_cast<uint32_t*>(&fatData[i]);
+        fatEntries.push_back(fatEntry);
+        // cout << "FAT Entry[" << i / 4 << "]: " << std::hex << std::setw(8) << std::setfill('0') << fatEntry << endl;
+        // cout << std::dec;
+    }
+
+    return fatEntries;
+}
+
+// Read RDET
+void BootSector::ReadRDET() {
+    // Calculate the byte offset to the beginning of the RDET area
+    uint64_t rdetOffset = (SectorBeforeFatInt + NumberOfFATsInt * SectorsPerFATInt) * BytesPerSectorInt;
+    cout << "RDET offset: " << std::hex << rdetOffset << endl;
+    // Seek to the beginning of the RDET area
+    LARGE_INTEGER liOffset;
+    liOffset.QuadPart = rdetOffset;
+    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN)) {
+        cerr << "Failed to seek to RDET area" << endl;
+        exit(1);
+    }
+
+    // Read the RDET entries
+    const size_t entrySize = 32;
 }

@@ -2,16 +2,17 @@
 #include <iostream>
 #include <Windows.h>
 #include <vector>
+#include <iomanip>
 
 using namespace std;
 
 class BootSector{
     public:
-        BootSector();
         ~BootSector();
-        void ReadBootSector();
+        void ReadBootSector(string path);
         void DisplayBootSector();
-        void ReadFAT();
+        std::vector<uint32_t> ReadFAT();
+        void ReadRDET();
     private:
         HANDLE hDevice;
         DWORD dwBytesRead;
