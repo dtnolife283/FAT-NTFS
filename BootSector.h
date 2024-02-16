@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <vector>
 #include <iomanip>
-
+#include <stdint.h>
 using namespace std;
 
 class BootSector{
