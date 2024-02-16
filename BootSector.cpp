@@ -141,7 +141,12 @@ std::vector<uint32_t> BootSector::ReadFAT() {
 void BootSector::ReadRDET() {
     // Calculate the byte offset to the beginning of the RDET area
     uint64_t rdetOffset = (SectorBeforeFatInt + NumberOfFATsInt * SectorsPerFATInt) * BytesPerSectorInt;
-    cout << "RDET offset: " << std::hex << rdetOffset << endl;
+    if (RootClusterInt != 0) {
+        uint64_t rootClusterOffset = (RootClusterInt - 2) * SectorsPerClusterInt * BytesPerSectorInt;
+        rdetOffset += rootClusterOffset;
+    }
+    cout << "RootClusterInt: " << RootClusterInt << "\n";
+
     // Seek to the beginning of the RDET area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = rdetOffset;
@@ -152,4 +157,30 @@ void BootSector::ReadRDET() {
 
     // Read the RDET entries
     const size_t entrySize = 32;
+    size_t numEntries = 0;
+    bool endOfDirectory = false;
+    
+    while (!endOfDirectory) {
+        for (size_t i = 0; i < BytesPerSectorInt / entrySize; ++i) {
+            // Read a directory entry
+            std::vector<uint8_t> entry(entrySize);
+            DWORD bytesRead;
+            cout << i << endl;
+
+            if (!ReadFile(hDevice, entry.data(), entrySize, &bytesRead, NULL)) {
+                cerr << "Failed to read RDET entry" << endl;
+                exit(1);
+            }
+
+            // Check if this entry is the end marker
+            if (entry[0] == 0x00) {
+                endOfDirectory = true;
+                break;  // End of directory reached
+            }
+
+            numEntries++;
+        }
+    }
+
+    cout << "Number of entries in RDET: " << numEntries << endl;
 }
