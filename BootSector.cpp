@@ -154,20 +154,24 @@ void BootSector::ReadRDET() {
         cerr << "Failed to seek to RDET area" << endl;
         exit(1);
     }
-    // 
-    std::vector<uint8_t> rdet(512);
+    // read rdet
+    std::vector<uint8_t> Rdet(512);
     DWORD bytesRead;
-    if (!ReadFile(hDevice, rdet.data(), 512, &bytesRead, NULL)) {     
+    if (!ReadFile(hDevice, Rdet.data(), 512, &bytesRead, NULL)) {     
         cerr << "\nFailed to read RDET entry" << endl;
     }
     // calc number of Entry in Rdet
     size_t numEntries = 0;
     for (int i = 0; i < 512; i += 32){
-        if (static_cast<unsigned int>(rdet[i]) != 0x00)
+        if (static_cast<unsigned int>(Rdet[i]) != 0x00)
             numEntries++;
         else
             break;
     }
     cout << "NumEntry: " << numEntries;
 
+    // Trans rdet to a vector of unsign int for easier calculator
+    vector <int> rdet;
+    for (int i = 0; i < numEntries * 32; ++i)
+        rdet.push_back(static_cast<unsigned int>(Rdet[i]));
 }
