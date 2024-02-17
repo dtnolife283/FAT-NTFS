@@ -101,7 +101,7 @@ void BootSector::DisplayBootSector(){
     cout << "Root cluster: " << RootClusterInt << endl;
     cout << "FSInfo: " << FSInfoInt << endl;
     cout << "Backup boot sector: " << BackupBootSectorInt << endl;
-    cout << "Physical drive number: " << PhysicalDriveNumberInt << endl;    
+    cout << "Physical drive number: " << PhysicalDriveNumberInt << endl;
 }
 
 // Read FAT
@@ -145,8 +145,8 @@ void BootSector::ReadRDET() {
         uint64_t rootClusterOffset = (RootClusterInt - 2) * SectorsPerClusterInt * BytesPerSectorInt;
         rdetOffset += rootClusterOffset;
     }
-    cout << "RootClusterInt: " << RootClusterInt << "\n";
-
+    cout << "\nRootClusterInt: " << RootClusterInt << "\n";
+    cout << "rdetOffset: " << rdetOffset << '\n';
     // Seek to the beginning of the RDET area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = rdetOffset;
@@ -154,33 +154,20 @@ void BootSector::ReadRDET() {
         cerr << "Failed to seek to RDET area" << endl;
         exit(1);
     }
-
-    // Read the RDET entries
-    const size_t entrySize = 32;
-    size_t numEntries = 0;
-    bool endOfDirectory = false;
-    
-    while (!endOfDirectory) {
-        for (size_t i = 0; i < BytesPerSectorInt / entrySize; ++i) {
-            // Read a directory entry
-            std::vector<uint8_t> entry(entrySize);
-            DWORD bytesRead;
-            cout << i << endl;
-
-            if (!ReadFile(hDevice, entry.data(), entrySize, &bytesRead, NULL)) {
-                cerr << "Failed to read RDET entry" << endl;
-                exit(1);
-            }
-
-            // Check if this entry is the end marker
-            if (entry[0] == 0x00) {
-                endOfDirectory = true;
-                break;  // End of directory reached
-            }
-
-            numEntries++;
-        }
+    // 
+    std::vector<uint8_t> rdet(512);
+    DWORD bytesRead;
+    if (!ReadFile(hDevice, rdet.data(), 512, &bytesRead, NULL)) {     
+        cerr << "\nFailed to read RDET entry" << endl;
     }
+    // calc number of Entry in Rdet
+    size_t numEntries = 0;
+    for (int i = 0; i < 512; i += 32){
+        if (static_cast<unsigned int>(rdet[i]) != 0x00)
+            numEntries++;
+        else
+            break;
+    }
+    cout << "NumEntry: " << numEntries;
 
-    cout << "Number of entries in RDET: " << numEntries << endl;
 }
