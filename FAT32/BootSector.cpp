@@ -1,14 +1,14 @@
 #include "BootSector.h"
 
-
-
 // Close disk
-BootSector::~BootSector() {
+BootSector::~BootSector()
+{
     CloseHandle(hDevice);
 }
 
 // Read boot sector
-void BootSector::ReadBootSector(string path) {
+void BootSector::ReadBootSector(string path)
+{
     string diskPath = "\\\\.\\";
     diskPath += path + ":";
 
@@ -16,13 +16,15 @@ void BootSector::ReadBootSector(string path) {
     wstring wdPath(diskPath.begin(), diskPath.end());
     hDevice = CreateFileW(wdPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (hDevice == INVALID_HANDLE_VALUE) {
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
         cerr << "Failed to open disk device" << endl;
         exit(1);
     }
 
     bResult = ReadFile(hDevice, bBootSector, sizeof(bBootSector), &dwBytesRead, NULL);
-    if (!bResult || dwBytesRead != sizeof(bBootSector)) {
+    if (!bResult || dwBytesRead != sizeof(bBootSector))
+    {
         cerr << "Failed to read boot sector" << endl;
         exit(1);
     }
@@ -57,7 +59,7 @@ void BootSector::ReadBootSector(string path) {
 
     memcpy(TotalSectors32, bBootSector + 32, 4);
     TotalSectorsInt = (TotalSectors32[3] << 24) + (TotalSectors32[2] << 16) + (TotalSectors32[1] << 8) + TotalSectors32[0];
-    
+
     memcpy(SectorsPerFAT32, bBootSector + 36, 4);
     SectorsPerFATInt = (SectorsPerFAT32[3] << 24) + (SectorsPerFAT32[2] << 16) + (SectorsPerFAT32[1] << 8) + SectorsPerFAT32[0];
 
@@ -66,7 +68,7 @@ void BootSector::ReadBootSector(string path) {
 
     memcpy(RootCluster, bBootSector + 44, 4);
     RootClusterInt = (RootCluster[3] << 24) + (RootCluster[2] << 16) + (RootCluster[1] << 8) + RootCluster[0];
-    
+
     memcpy(FSInfo, bBootSector + 48, 2);
     FSInfoInt = (FSInfo[1] << 8) + FSInfo[0];
 
@@ -89,7 +91,8 @@ void BootSector::ReadBootSector(string path) {
 }
 
 // Display boot sector in decimal
-void BootSector::DisplayBootSector(){
+void BootSector::DisplayBootSector()
+{
     cout << "Bytes per sector: " << BytesPerSectorInt << endl;
     cout << "Sectors per cluster: " << SectorsPerClusterInt << endl;
     cout << "Sector before FAT: " << SectorBeforeFatInt << endl;
@@ -105,13 +108,15 @@ void BootSector::DisplayBootSector(){
 }
 
 // Read FAT
-std::vector<uint32_t> BootSector::ReadFAT() {
+std::vector<uint32_t> BootSector::ReadFAT()
+{
     uint64_t fatOffset = SectorBeforeFatInt * BytesPerSectorInt;
 
     // Seek to the beginning of the FAT area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = fatOffset;
-    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN)) {
+    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN))
+    {
         cerr << "Failed to seek to FAT area" << endl;
         exit(1);
     }
@@ -120,15 +125,17 @@ std::vector<uint32_t> BootSector::ReadFAT() {
     DWORD bytesToRead = NumberOfFATsInt * SectorsPerFATInt * BytesPerSectorInt;
     std::vector<uint8_t> fatData(bytesToRead);
     DWORD bytesRead;
-    if (!ReadFile(hDevice, fatData.data(), bytesToRead, &bytesRead, NULL) || bytesRead != bytesToRead) {
+    if (!ReadFile(hDevice, fatData.data(), bytesToRead, &bytesRead, NULL) || bytesRead != bytesToRead)
+    {
         cerr << "Failed to read FAT" << endl;
         exit(1);
     }
 
     // Process FAT entries
     vector<uint32_t> fatEntries;
-    for (size_t i = 0; i < fatData.size(); i += 4) {
-        uint32_t fatEntry = *reinterpret_cast<uint32_t*>(&fatData[i]);
+    for (size_t i = 0; i < fatData.size(); i += 4)
+    {
+        uint32_t fatEntry = *reinterpret_cast<uint32_t *>(&fatData[i]);
         fatEntries.push_back(fatEntry);
         // cout << "FAT Entry[" << i / 4 << "]: " << std::hex << std::setw(8) << std::setfill('0') << fatEntry << endl;
         // cout << std::dec;
@@ -138,10 +145,12 @@ std::vector<uint32_t> BootSector::ReadFAT() {
 }
 
 // Read RDET
-void BootSector::ReadRDET() {
+void BootSector::ReadRDET()
+{
     // Calculate the byte offset to the beginning of the RDET area
     uint64_t rdetOffset = (SectorBeforeFatInt + NumberOfFATsInt * SectorsPerFATInt) * BytesPerSectorInt;
-    if (RootClusterInt != 0) {
+    if (RootClusterInt != 0)
+    {
         uint64_t rootClusterOffset = (RootClusterInt - 2) * SectorsPerClusterInt * BytesPerSectorInt;
         rdetOffset += rootClusterOffset;
     }
@@ -150,19 +159,22 @@ void BootSector::ReadRDET() {
     // Seek to the beginning of the RDET area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = rdetOffset;
-    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN)) {
+    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN))
+    {
         cerr << "Failed to seek to RDET area" << endl;
         exit(1);
     }
     // read rdet
     std::vector<uint8_t> Rdet(512);
     DWORD bytesRead;
-    if (!ReadFile(hDevice, Rdet.data(), 512, &bytesRead, NULL)) {     
+    if (!ReadFile(hDevice, Rdet.data(), 512, &bytesRead, NULL))
+    {
         cerr << "\nFailed to read RDET entry" << endl;
     }
     // calc number of Entry in Rdet
     size_t numEntries = 0;
-    for (int i = 0; i < 512; i += 32){
+    for (int i = 0; i < 512; i += 32)
+    {
         if (static_cast<unsigned int>(Rdet[i]) != 0x00)
             numEntries++;
         else
@@ -171,7 +183,7 @@ void BootSector::ReadRDET() {
     cout << "NumEntry: " << numEntries;
 
     // Trans rdet to a vector of unsign int for easier calculator
-    vector <int> rdet;
+    vector<int> rdet;
     for (int i = 0; i < numEntries * 32; ++i)
         rdet.push_back(static_cast<unsigned int>(Rdet[i]));
 }
