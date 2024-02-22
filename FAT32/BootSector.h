@@ -12,7 +12,7 @@ class BootSector{
         void ReadBootSector(string path);
         void DisplayBootSector();
         std::vector<uint32_t> ReadFAT();
-        void ReadRDET();
+        std::vector<uint8_t> ReadRDET();
     private:
         HANDLE hDevice;
         DWORD dwBytesRead;

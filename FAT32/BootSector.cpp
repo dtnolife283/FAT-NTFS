@@ -111,7 +111,7 @@ void BootSector::DisplayBootSector()
 std::vector<uint32_t> BootSector::ReadFAT()
 {
     uint64_t fatOffset = SectorBeforeFatInt * BytesPerSectorInt;
-
+    cout << "FAT Offset: " << fatOffset << endl;
     // Seek to the beginning of the FAT area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = fatOffset;
@@ -145,17 +145,17 @@ std::vector<uint32_t> BootSector::ReadFAT()
 }
 
 // Read RDET
-void BootSector::ReadRDET()
+vector<uint8_t> BootSector::ReadRDET()
 {
     // Calculate the byte offset to the beginning of the RDET area
     uint64_t rdetOffset = (SectorBeforeFatInt + NumberOfFATsInt * SectorsPerFATInt) * BytesPerSectorInt;
+    cout << "RDET Offset: " << rdetOffset << endl;
     if (RootClusterInt != 0)
     {
         uint64_t rootClusterOffset = (RootClusterInt - 2) * SectorsPerClusterInt * BytesPerSectorInt;
         rdetOffset += rootClusterOffset;
     }
-    cout << "\nRootClusterInt: " << RootClusterInt << "\n";
-    cout << "rdetOffset: " << rdetOffset << '\n';
+
     // Seek to the beginning of the RDET area
     LARGE_INTEGER liOffset;
     liOffset.QuadPart = rdetOffset;
@@ -164,26 +164,59 @@ void BootSector::ReadRDET()
         cerr << "Failed to seek to RDET area" << endl;
         exit(1);
     }
-    // read rdet
-    std::vector<uint8_t> Rdet(512);
+
+    // Count Entries in RDET
+    std::vector<uint8_t> tmp(512);
     DWORD bytesRead;
-    if (!ReadFile(hDevice, Rdet.data(), 512, &bytesRead, NULL))
-    {
-        cerr << "\nFailed to read RDET entry" << endl;
-    }
-    // calc number of Entry in Rdet
+    bool out = false;
     size_t numEntries = 0;
-    for (int i = 0; i < 512; i += 32)
+    while(!out)
     {
-        if (static_cast<unsigned int>(Rdet[i]) != 0x00)
+        if (!ReadFile(hDevice, tmp.data(), 512, &bytesRead, NULL) || bytesRead != 512)
+        {
+            cerr << "Failed to read RDET" << endl;
+            exit(1);
+        }
+        for (int i = 0; i < 512; i += 32)
+        {
+            if (static_cast<unsigned int>(tmp[i]) == 0x00)
+            {
+                out = true;
+                break;
+            }
             numEntries++;
-        else
-            break;
+        }
     }
-    cout << "NumEntry: " << numEntries;
+
+    // Seek to the beginning of the RDET area
+    if (!SetFilePointerEx(hDevice, liOffset, NULL, FILE_BEGIN))
+    {
+        cerr << "Failed to seek to RDET area" << endl;
+        exit(1);
+    }
+
+    DWORD bytesToRead = numEntries * 32;
+    if (bytesToRead < 512)
+        bytesToRead = 512;
+    else if (bytesToRead % 512 != 0)
+        bytesToRead = (bytesToRead / 512 + 1) * 512;
+    
+    // Read the RDET entries
+    std::vector<uint8_t> Rdet(bytesToRead);
+    if (!ReadFile(hDevice, Rdet.data(), bytesToRead, &bytesRead, NULL) || bytesRead != bytesToRead)
+    {
+        cerr << "Failed to read RDET" << endl;
+        exit(1);
+    }
 
     // Trans rdet to a vector of unsign int for easier calculator
-    vector<int> rdet;
-    for (int i = 0; i < numEntries * 32; ++i)
-        rdet.push_back(static_cast<unsigned int>(Rdet[i]));
+    vector<uint8_t> rdet;
+    for (int i = 0; i < bytesToRead; ++i){
+        if (i % 32 == 0){
+            if (Rdet[i] == 0x00)
+                break;
+        }
+        rdet.push_back(Rdet[i]);
+    }
+    return rdet;
 }

@@ -49,9 +49,11 @@ void Program::run() {
         cout << "Displaying boot sector information..." << endl << endl;
         volume.bootSector.DisplayBootSector();
 
+        volume.read_fatData();
+        volume.read_RDETData();
 
-        volume.fatData = volume.bootSector.ReadFAT();
-        volume.bootSector.ReadRDET();
+        cout << "Displaying FAT entries..." << endl << endl;
+        volume.DisplayFatData();
 
         cout << endl;
         cout << "============================" << endl;
