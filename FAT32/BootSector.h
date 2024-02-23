@@ -64,36 +64,3 @@ private:
     int SectorsPerFATInt;
     int PhysicalDriveNumberInt;
 };
-
-class Item
-{
-protected:
-    std::string m_name;
-    int status;
-    int size;
-    int StartCluster;
-public:
-    Item();
-    std::string getName();
-    virtual int getSize() = 0;
-    virtual void print(int depth) = 0;
-};
-
-class File : public Item{
-public:
-    File();
-    int getSize();
-    void print(int depth);
-};
-
-class Folder : public Item{
-private:
-    std::vector<Item*> items;
-public:
-    Folder();
-    int getSize();
-    void print(int depth);
-    void addItem(Item* item);
-    Item* removeByName(std::string name);
-    Item* findByName(std::string name);
-};
