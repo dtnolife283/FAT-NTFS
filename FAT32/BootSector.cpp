@@ -222,3 +222,106 @@ vector<uint8_t> BootSector::ReadRDET()
     }
     return rdet;
 }
+
+
+
+// find the N sub entry, add N entry name to vecto then reverse it
+string getNameWithSubEntry(vector<uint8_t>& data, uint32_t idx){
+    vector<string> result;
+    int tmp = idx;
+
+    // find the idx of entry Nth
+    while (tmp - 32 >= 0 && data[tmp - 32 + 11] == 0x0F)
+        tmp -= 32;
+
+    // getName from N and push to vecto result
+    for (int i = tmp; i < idx; i += 32){
+        string s = "";
+        if (data[i] == 0x00 || data[i] == 0xE5)
+            return s;
+        bool flag = true;
+        vector <uint8_t> nameZone;
+        
+        // the next 3 for loop: get name 
+        for (int j = 0; j < 10; ++j){
+            if (data[i + j + 1] == 0xFF){
+                flag = false;
+                break;
+            } else if (data[i + j + 1] != 0x00){
+                nameZone.push_back(data[i + j + 1]);
+            }
+        }
+
+        for (int j = 0; flag && j < 12; ++j){
+            if (data[i + j + 14] == 0xFF){
+                flag = false;
+                break;
+            } else if (data[i + j + 14] == 0x00){
+                continue;
+            } else {
+                nameZone.push_back(data[i + j + 14]);
+            }
+        }
+
+        for (int j = 0; flag && j < 4; ++j){
+            if (data[i + j + 28] == 0xFF){
+                flag = false;
+                break;
+            } else if (data[i + j + 28] != 0x00){
+                nameZone.push_back(data[i + j + 28]);
+            }
+        }
+        
+        // turn decimal to character
+        for (auto j : nameZone){
+            s += (char)j;
+        }
+        nameZone.clear();
+        result.push_back(s);
+    }
+
+    string s = "";
+    // reversed name in vecto
+    for (int j = result.size() - 1 ; j >=0; --j){
+        s += result[j];
+    }
+    return s;
+}
+
+int getSize(vector<uint8_t>& data, int idx){
+    return data[idx + 31] + data[idx + 30] * pow(16,2) + data[idx + 29] * pow(16,4) + data[idx + 28] * pow(16,6);
+}
+
+int getNextSector(vector<uint8_t>& data, int idx, int SectorBeforeFat, int SectorPerFat, int NumberOfFats, int SectorPerCluster, int RootCluster){
+    int k = data[idx + 26] + data[idx + 27] * pow(16,2) + data[idx + 21] * pow(16,4) + data[idx + 20] * pow(16,6);
+    int result = SectorBeforeFat + SectorPerFat * NumberOfFats + (k - RootCluster) * SectorPerCluster;
+    return result; 
+}
+
+
+
+// later change from void to folder* to add to composite
+void BootSector::TransRdet(vector<uint8_t>& rdet){
+    for (int i = 0; i < rdet.size(); i += 32){
+        if (rdet[i] == 0xE5 || rdet[i + 11] == 0x0F)   // if this entry is deleted or sub entry
+            continue;
+        if (rdet[i + 11 - 32] == 0x0F){      // if this main entry has sub entry
+            string Name = ""; 
+            Name = getNameWithSubEntry(rdet, i);     // start read name from the latest sub entry   
+            int status = rdet[i + 11];
+            bool isFolder = (1 & (status >> 4));        //true: folder, false: file
+            bool isSystemFolder = (1 & (status >> 2));
+            bool isHidden = (1 & (status >> 1));
+            int size = 0;
+            int sectorOfChild = getNextSector(rdet, i, SectorBeforeFatInt, SectorsPerFATInt, NumberOfFATsInt, SectorsPerClusterInt, RootClusterInt);
+            if (!isFolder){
+                size = getSize(rdet, i);    // if folder -> size = 0, we need calculate size in composite
+                // get Data here
+            }
+            else {
+                //get to child
+            }
+            cout << Name << " " << isFolder << " " << isSystemFolder << " " << isHidden << '\n';            
+        }
+    }
+}

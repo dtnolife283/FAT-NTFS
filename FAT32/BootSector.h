@@ -4,6 +4,7 @@
 #include <vector>
 #include <iomanip>
 #include <stdint.h>
+#include <cmath>
 using namespace std;
 
 class BootSector
@@ -14,7 +15,7 @@ public:
     void DisplayBootSector();
     std::vector<uint32_t> ReadFAT();
     std::vector<uint8_t> ReadRDET();
-
+    void TransRdet(vector<uint8_t>& rdet);  //later change from void to Folder*
 private:
     HANDLE hDevice;
     DWORD dwBytesRead;
