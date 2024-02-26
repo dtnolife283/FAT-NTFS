@@ -14,6 +14,7 @@ public:
     void ReadBootSector(string path);
     void DisplayBootSector();
     std::vector<uint32_t> ReadFAT();
+    std::vector<uint8_t> ReadSector(int sector);
     std::vector<uint8_t> ReadRDET();
     void TransRdet(vector<uint8_t>& rdet);  //later change from void to Folder*
 private:
