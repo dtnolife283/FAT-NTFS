@@ -327,7 +327,7 @@ void BootSector::TransRdet(vector<uint8_t>& rdet){
 }
 
 // Read Sector
-vector<uint8_t> BootSector::ReadSector(int sector){
+vector<uint8_t> BootSector::ReadSector(int sector , int numSector){
     uint64_t sectorOffset = sector * BytesPerSectorInt;
 
     // Seek to the beginning of the sector
@@ -340,9 +340,9 @@ vector<uint8_t> BootSector::ReadSector(int sector){
     }
 
     // Read the sector
-    std::vector<uint8_t> sectorData(BytesPerSectorInt);
+    std::vector<uint8_t> sectorData(BytesPerSectorInt  * numSector);
     DWORD bytesRead;
-    if (!ReadFile(hDevice, sectorData.data(), BytesPerSectorInt, &bytesRead, NULL) || bytesRead != BytesPerSectorInt)
+    if (!ReadFile(hDevice, sectorData.data(), BytesPerSectorInt * numSector , &bytesRead, NULL) || bytesRead != BytesPerSectorInt * numSector)
     {
         cerr << "Failed to read sector" << endl;
         exit(1);
