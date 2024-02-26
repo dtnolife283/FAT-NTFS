@@ -1,7 +1,5 @@
 #include <BootSector.h>
 
-
-
 class Item
 {
 protected:
@@ -9,33 +7,44 @@ protected:
     int status;
     int size;
     int StartCluster;
+    bool isSystem;
+    bool isHidden;
+
 public:
     Item();
     std::string getName();
+    void setName(std::string name) { m_name = name; }
+    void setSize(int size) { this->size = size; }
     virtual int getSize() = 0;
-    virtual void print(int depth) = 0;
+    virtual void print(int depth, bool isHidden) = 0;
+    virtual bool isArchive() = 0;
+    virtual ~Item() = 0;
 };
 
-class File : public Item{
+class File : public Item
+{
 public:
     File();
     int getSize();
-    void print(int depth);
+    void print(int depth, bool isHidden);
+    bool isArchive();
 };
 
-class Folder : public Item{
+class Folder : public Item
+{
 private:
-    std::vector<Item*> items;
+    std::vector<Item *> items;
+
 public:
     Folder();
     int getSize();
-    void print(int depth);
-    void addItem(Item* item);
-    Item* removeByName(std::string name);
-    Item* findByName(std::string name);
+    void print(int depth, bool isHidden);
+    void addItem(Item *item);
+    Item *removeByName(std::string name);
+    Item *findByName(std::string name);
+    bool isArchive();
+    ~Folder();
 };
-
-
 
 Item::Item()
 {
@@ -50,6 +59,8 @@ std::string Item::getName()
     return this->m_name;
 }
 
+Item::~Item() {}
+
 File::File() {}
 
 int File::getSize()
@@ -57,11 +68,21 @@ int File::getSize()
     return this->size;
 }
 
-void File::print(int depth)
+bool File::isArchive()
 {
+    return true;
+}
+
+void File::print(int depth, bool isHidden)
+{
+    if (isHidden && this->isHidden)
+    {
+        return;
+    }
     for (int i = 0; i < depth; i++)
     {
-        std::cout << "\t";
+        std::cout << "+------"
+                  << "\t";
     }
     std::cout << this->m_name << " " << this->size << std::endl;
 }
@@ -77,17 +98,22 @@ int Folder::getSize()
     return size;
 }
 
-void Folder::print(int depth)
+void Folder::print(int depth, bool isHidden)
 {
+    if (isHidden && this->isHidden)
+    {
+        return;
+    }
     for (int i = 0; i < depth; i++)
     {
-        std::cout << "\t";
+        std::cout << "+------"
+                  << "\t";
     }
     std::cout << this->m_name << " " << this->getSize() << std::endl;
 
     for (int i = 0; i < this->items.size(); i++)
     {
-        this->items[i]->print(depth + 1);
+        this->items[i]->print(depth + 1, isHidden);
     }
 }
 
@@ -139,4 +165,17 @@ Item *Folder::findByName(std::string name)
     }
 
     return nullptr;
+}
+
+bool Folder::isArchive()
+{
+    return false;
+}
+
+Folder::~Folder()
+{
+    for (int i = 0; i < this->items.size(); i++)
+    {
+        delete this->items[i];
+    }
 }
