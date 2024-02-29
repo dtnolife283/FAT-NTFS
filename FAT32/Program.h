@@ -54,7 +54,8 @@ void Program::run() {
 
         
         uint32_t RdetSector = volume.bootSector.SectorBeforeFatInt + volume.bootSector.NumberOfFATsInt * volume.bootSector.SectorsPerFATInt; 
-        vector<Item*> data = volume.TransRdet(volume.RDETData, true, RdetSector);  // nơi chứa mọi thông tin
+        uint32_t startCluster = volume.bootSector.RootClusterInt;
+        vector<Item*> data = volume.TransRdet(volume.RDETData, true, RdetSector, startCluster); // chứa mọi data
 
         // này test thử
         for (auto i : data)

@@ -97,11 +97,13 @@ int getSize(vector<uint8_t>& data, int idx){
     return data[idx + 28] + data[idx + 29] * pow(16,2) + data[idx + 30] * pow(16,4) + data[idx + 31] * pow(16,6);
 }
 
-int getNextSector(vector<uint8_t>& data, int idx, int SectorBeforeFat, int SectorPerFat, int NumberOfFats, int SectorPerCluster, int RootCluster, int& cluster){
-    int k = data[idx + 26] + data[idx + 27] * pow(16,2) + data[idx + 21] * pow(16,4) + data[idx + 20] * pow(16,6);
-    int result = SectorBeforeFat + SectorPerFat * NumberOfFats + (k - RootCluster) * SectorPerCluster;
+
+int getNextSector(vector<uint8_t>& data, int idx, int SectorBeforeFat, int SectorPerFat, int NumberOfFats, int SectorPerCluster, int RootCluster, uint32_t& cluster){
+    cluster = data[idx + 26] + data[idx + 27] * pow(16,2) + data[idx + 21] * pow(16,6) + data[idx + 20] * pow(16,4) ;
+    int result = SectorBeforeFat + SectorPerFat * NumberOfFats + (cluster - RootCluster) * SectorPerCluster;
     return result; 
 }
+
 
 
 string readData(vector<uint8_t>& data){
@@ -123,8 +125,9 @@ bool isTxt(string Name){
         return true;
     return false;
 }
-// later change from void to folder* to add to composite
-vector<Item* > Volume::TransRdet(vector<uint8_t>& data, bool flag, uint32_t startSector){
+
+// Trans data in Rdet to vector
+vector<Item* > Volume::TransRdet(vector<uint8_t>& data, bool flag, uint32_t startSector, uint32_t& startCluster){
     vector<Item*> result;
     int startIdx = 0;
     if (!flag)
@@ -153,13 +156,12 @@ vector<Item* > Volume::TransRdet(vector<uint8_t>& data, bool flag, uint32_t star
             Name = getNameMainEntry(data, i, isFolder);   // else only read name in that entry
         
         int size = 0;
-        int cluster = 0;
-        int sectorOfChild = getNextSector(data, i, bootSector.SectorBeforeFatInt, bootSector.SectorsPerFATInt, bootSector.NumberOfFATsInt, bootSector.SectorsPerClusterInt, bootSector.RootClusterInt, cluster);
+        int sectorOfChild = getNextSector(data, i, bootSector.SectorBeforeFatInt, bootSector.SectorsPerFATInt, bootSector.NumberOfFATsInt, bootSector.SectorsPerClusterInt, bootSector.RootClusterInt, startCluster);
         int numbCluster = 1;
-        
-        while (fatData[cluster++] != 0x0FFFFFFF)
+        int tmp = startCluster;
+        while (fatData[tmp++] != 0x0FFFFFFF)        // count number of cluster in that folder/file
             numbCluster++;
-
+        
         if (isFile){
             size = getSize(data, i);    // if folder -> size = 0, we need calculate size in composite
             vector<uint8_t> Content = ReadSector(sectorOfChild ,numbCluster * bootSector.SectorsPerCluster);
@@ -173,8 +175,10 @@ vector<Item* > Volume::TransRdet(vector<uint8_t>& data, bool flag, uint32_t star
             result.push_back(file);
         } else {
             //get to child
+            
             vector<uint8_t> sdet = ReadSector(sectorOfChild ,numbCluster * bootSector.SectorsPerCluster);
-            vector<Item*> data = TransRdet(sdet, false, sectorOfChild);
+            
+            vector<Item*> data = TransRdet(sdet, false, sectorOfChild, startCluster);
             Folder* folder = new Folder(Name, sector, isSystem, isHidden);
             for (auto i : data) 
                 folder->addItem(i);
