@@ -264,56 +264,55 @@ string getNameFile(int id)
     return res;
 }
 
-// Hàm đệ quy in ra cây thư mục
-void printFolderTree(int a, int tab, int vt)
+// In cây thư mục
+void printFolderTree(int id, int tab, int pos)
 {
     tab++;
     printTab(tab);
-    cout << getNameFile(a) << endl;
+    cout << getNameFile(id) << endl;
 
-    // cho ID với parents = -1
-    fileID[vt] = -1;
-    parentID[vt] = -1;
+    // Cho ID với parents = -1
+    fileID[pos] = -1;
+    parentID[pos] = -1;
 
     vector<int> child;
-    vector<int> VT;
-    // tìm số lượng những thằng con của a
-    for (int j = 0; j < fileID.size(); j++)
-        if (parentID[j] == a)
+    vector<int> POS;
+    // Tìm số lượng con
+    for (int j = 0; j < fileID.size(); ++j)
+        if (parentID[j] == id)
         {
             child.push_back(fileID[j]);
-            VT.push_back(j);
+            POS.push_back(j);
         }
 
     if (child.size() == 0)
         return;
 
-    // in ra những thằng con của từng phần tử trong child
+    // In con của từng phần tử
     for (int i = 0; i < child.size(); ++i)
-        printFolderTree(child[i], tab, VT[i]);
+        printFolderTree(child[i], tab, POS[i]);
 }
 
 // Đọc Bios Parameter Block
 void readBPB(BYTE *sector, LPCWSTR disk)
 {
-    unsigned int bytes_per_sector = getBytes(sector, 0x0B, 2);    // Bytes Per Sector
-    unsigned int sectors_per_cluster = getBytes(sector, 0x0D, 1); // Sectors Per Cluster
-    unsigned int sectors_per_track = getBytes(sector, 0x18, 2);   // Sectors Per Track
-    unsigned int total_sectors = getBytes(sector, 0x28, 8);       // Total Sectors
-    unsigned int MFTStart = getBytes(sector, 0x30, 8);            // Cluster start of MFT
-    unsigned int MFTMirrorStart = getBytes(sector, 0x38, 8);      // Cluster start of MFTMirror
+    unsigned int bytesPerSector = getBytes(sector, 0x0B, 2);    // Bytes Per Sector
+    unsigned int sectorsPerCluster = getBytes(sector, 0x0D, 1); // Sectors Per Cluster
+    unsigned int sectorsPerTrack = getBytes(sector, 0x18, 2);   // Sectors Per Track
+    unsigned int totalSectors = getBytes(sector, 0x28, 8);      // Total Sectors
+    unsigned int MFTStart = getBytes(sector, 0x30, 8);          // Cluster start of MFT
+    unsigned int MFTMirrorStart = getBytes(sector, 0x38, 8);    // Cluster start of MFTMirror
 
-    cout << endl;
-    cout << "Bytes Per Sector : " << bytes_per_sector << endl;
-    cout << "Sectors Per Cluster : " << sectors_per_cluster << endl;
-    cout << "Sectors Per Track : " << sectors_per_track << endl;
-    cout << "Total Sectors : " << total_sectors << endl;
-    cout << "Cluster start of MFT : " << MFTStart << endl;
-    cout << "Cluster start of MFTMirror : " << MFTMirrorStart << endl;
+    cout << "\nSo Bytes moi Sector : " << bytesPerSector << endl;
+    cout << "So Sectors moi Cluster : " << sectorsPerCluster << endl;
+    cout << "So Sectors moi Track : " << sectorsPerTrack << endl;
+    cout << "Tong so Sectors : " << totalSectors << endl;
+    cout << "Cluster bat dau cua MFT : " << MFTStart << endl;
+    cout << "Cluster bat dau cua MFTMirror : " << MFTMirrorStart << endl;
     cout << endl;
 
     // Đọc $MFT Entry
-    readMFT(MFTStart, sectors_per_cluster, disk);
+    readMFT(MFTStart, sectorsPerCluster, disk);
 }
 
 // Đọc $MFT Entry
@@ -325,17 +324,17 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
 
     // INFORMATION
     int Entry_in4 = getBytes(MFT, 0x014, 2);
-    cout << "Attribute $INFORMATION Entry starts at: " << Entry_in4 << endl;
+    cout << "Attribute $INFORMATION Entry bat dau tai: " << Entry_in4 << endl;
 
     int len_in4 = getBytes(MFT, 0x048, 4);
-    cout << "Length of INFOR Entry: " << len_in4 << endl;
+    cout << "Do dai cua Infomation Entry: " << len_in4 << endl;
 
     // FILE NAME
     int Entry_Name = Entry_in4 + len_in4;
-    cout << "Attribute $FILE NAME Entry starts at: " << Entry_Name << endl;
+    cout << "Attribute $FILE NAME Entry bat dau tai: " << Entry_Name << endl;
 
     int len_Name = getBytes(MFT, 0x09C, 4);
-    cout << "Length of $FILE NAME Entry: " << len_Name << endl;
+    cout << "Do dai cua $FILE NAME Entry: " << len_Name << endl;
 
     // DATA
     int tmp = getBytes(MFT, 0x108, 4);
@@ -345,25 +344,25 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
         Entry_Data = Entry_Name + len_Name + getBytes(MFT, 0x10C, 4);
         cout << "Attribute $DATA Entry starts at: " << Entry_Data << endl;
         int len_data = getBytes(MFT, 0x134, 4);
-        cout << "Length of DATA Entry: " << len_data << endl;
+        cout << "Do dai cua Data Entry: " << len_data << endl;
     }
     else
     {
         Entry_Data = Entry_Name + len_Name;
         cout << "Attribute $DATA Entry starts at: " << Entry_Data << endl;
         int len_data = getBytes(MFT, 0x10C, 4);
-        cout << "Length of DATA Entry: " << len_data << endl;
+        cout << "Do dai cua Data Entry: " << len_data << endl;
     }
 
     // main DATA
     unsigned int len_MFT = MFTStart + (getBytes(MFT, Entry_Data + 24, 8) + 1) * 8;
-    cout << "Number sector in MFT is: " << len_MFT - MFTStart << endl;
+    cout << "So luong sector trong MFT: " << len_MFT - MFTStart << endl;
     cout << endl;
 
     // xử lí cây thư mục
     folderTree(len_MFT, MFTStart, disk);
 
-    delete MFT;
+    delete[] MFT;
 }
 
 // xử lí cây thư mục
@@ -372,7 +371,11 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
     for (int i = 2; i < len_MFT - MFTStart; i += 2)
     {
         int currentSector = MFTStart + i;
+
+        // Tạo mảng lưu sector
         BYTE *currentEntry = new BYTE[512];
+
+        // Đọc sector từ ổ đĩa disk từ vị trí currentSector lưu vào currentEntry
         readSect2(disk, currentEntry, currentSector);
         if (numToString(currentEntry, 0x00, 4) == "FILE")
         {
@@ -386,7 +389,11 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
                 int startInfor = getBytes(currentEntry, 0x014, 2);
                 int sizeInfor = readEntryInformation(currentEntry, startInfor);
                 if (sizeInfor == -1)
+                {
+                    delete[] currentEntry;
                     continue;
+                }
+
                 int startName = sizeInfor + 56;
                 int sizeName = readEntryFileName(currentEntry, startName, ID);
                 int startData = startName + sizeName;
@@ -412,11 +419,11 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
             }
         }
 
-        delete currentEntry;
+        delete[] currentEntry;
     }
 
     // in ra cây thư mục
-    cout << "---------------------------------------------------------" << endl;
+    cout << "---------------------------------------------------------\n";
     cout << "\t \t \t CAY THU MUC: " << endl;
     for (int i = 0; i < fileID.size(); ++i)
         if (fileID[i] != -1 && parentID[i] != -1)
@@ -482,4 +489,33 @@ void printSector(BYTE *sector)
     }
 
     cout << endl;
+}
+
+// Hàm đệ quy in ra cây thư mục
+void printFolderTree(int a, int tab, int vt)
+{
+    tab++;
+    printTab(tab);
+    cout << getNameFile(a) << endl;
+
+    // cho ID với parents = -1
+    fileID[vt] = -1;
+    parentID[vt] = -1;
+
+    vector<int> child;
+    vector<int> VT;
+    // tìm số lượng những thằng con của a
+    for (int j = 0; j < fileID.size(); j++)
+        if (parentID[j] == a)
+        {
+            child.push_back(fileID[j]);
+            VT.push_back(j);
+        }
+
+    if (child.size() == 0)
+        return;
+
+    // in ra những thằng con của từng phần tử trong child
+    for (int i = 0; i < child.size(); ++i)
+        printFolderTree(child[i], tab, VT[i]);
 }
