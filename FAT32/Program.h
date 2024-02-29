@@ -52,8 +52,15 @@ void Program::run() {
         volume.read_fatData();
         volume.read_RDETData();
 
-        cout << "Displaying FAT entries..." << endl << endl;
-        volume.DisplayFatData();
+        
+        uint32_t RdetSector = volume.bootSector.SectorBeforeFatInt + volume.bootSector.NumberOfFATsInt * volume.bootSector.SectorsPerFATInt; 
+        vector<Item*> data = volume.TransRdet(volume.RDETData, true, RdetSector);  // nơi chứa mọi thông tin
+
+        // này test thử
+        for (auto i : data)
+            i -> print(0);
+
+
 
         cout << endl;
         cout << "============================" << endl;

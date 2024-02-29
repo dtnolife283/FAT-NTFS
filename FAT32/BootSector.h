@@ -1,11 +1,15 @@
 #pragma once
+
+
 #include <iostream>
 #include <Windows.h>
 #include <vector>
-#include <iomanip>
 #include <stdint.h>
-#include <cmath>
+#include <string>
+#include <iomanip>
+
 using namespace std;
+
 
 class BootSector
 {
@@ -14,10 +18,20 @@ public:
     void ReadBootSector(string path);
     void DisplayBootSector();
     std::vector<uint32_t> ReadFAT();
-    std::vector<uint8_t> ReadSector(int sector, int numSector);
     std::vector<uint8_t> ReadRDET();
-    void TransRdet(vector<uint8_t>& rdet);  //later change from void to Folder*
-private:
+    int BytesPerSectorInt;
+    int SectorsPerClusterInt;
+    int SectorBeforeFatInt;
+    int NumberOfFATsInt;
+    int SectorsPerTrackInt;
+    int NumberOfHeadsInt;
+    int TotalSectorsInt;
+    int RootClusterInt;
+    int FSInfoInt;
+    int BackupBootSectorInt;
+    int SectorsPerFATInt;
+    int PhysicalDriveNumberInt;
+    
     HANDLE hDevice;
     DWORD dwBytesRead;
     BOOL bResult;
@@ -53,16 +67,5 @@ private:
     BYTE BootCode[420];
     BYTE BootSig[2];
 
-    int BytesPerSectorInt;
-    int SectorsPerClusterInt;
-    int SectorBeforeFatInt;
-    int NumberOfFATsInt;
-    int SectorsPerTrackInt;
-    int NumberOfHeadsInt;
-    int TotalSectorsInt;
-    int RootClusterInt;
-    int FSInfoInt;
-    int BackupBootSectorInt;
-    int SectorsPerFATInt;
-    int PhysicalDriveNumberInt;
+
 };
