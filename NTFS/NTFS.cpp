@@ -13,30 +13,32 @@ bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
     HANDLE device = NULL;
 
     device = CreateFileW(drive,                              // Drive
-                         GENERIC_READ,                       // Access mode
+                         GENERIC_READ,                       // Trạng thái truy cập
                          FILE_SHARE_READ | FILE_SHARE_WRITE, // Share Mode
-                         NULL,                               // Security Descriptor
-                         OPEN_EXISTING,                      // How to create
-                         0,                                  // File attributes
-                         NULL);                              // Handle to template
+                         NULL,                               // Security Descriptor (default)
+                         OPEN_EXISTING,                      // cách tạo file
+                         0,                                  // thuộc tính file
+                         NULL);                              // xử lý file mẫu
 
-    if (device == INVALID_HANDLE_VALUE) // Open Error
+    if (device == INVALID_HANDLE_VALUE) // Nếu không mở được file
     {
-        cout << "CreateFile : " << GetLastError() << endl;
-        cout << endl;
+        cerr << "CreateFile : " << GetLastError() << endl;
         return 0;
     }
 
-    SetFilePointer(device, readPoint, NULL, FILE_BEGIN); // Set a Point to Read
+    // Đặt vị trí con trỏ file tại vị trí "readPoint"
+    SetFilePointer(device, readPoint, NULL, FILE_BEGIN);
 
+    // Đọc sector
     if (!ReadFile(device, sector, 512, &bytesRead, NULL))
     {
-        cout << "ReadFile : " << GetLastError() << endl;
+        cerr << "ReadFile : " << GetLastError() << endl;
         return 0;
     }
+    // Đóng file
     else
     {
-        cout << "Doc thanh cong !!!" << endl;
+        cout << "Thanh cong doc sector" << endl;
         cout << endl;
         return 1;
     }
@@ -48,27 +50,29 @@ void readSect2(LPCWSTR disk, BYTE *&DATA, unsigned int _nsect)
     DWORD dwBytesRead(0);
 
     HANDLE hFloppy = NULL;
-    hFloppy = CreateFileW(disk,                               // Floppy drive to open
-                          GENERIC_READ,                       // Access mode
-                          FILE_SHARE_READ | FILE_SHARE_WRITE, // Share Mode
-                          NULL,                               // Security Descriptor
-                          OPEN_EXISTING,                      // How to create
-                          0,                                  // File attributes
-                          NULL);                              // Handle to template
+    hFloppy = CreateFileW(disk, // Floppy drive cần mở
+                          GENERIC_READ,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          NULL,
+                          OPEN_EXISTING,
+                          0,
+                          NULL);
 
     if (hFloppy != NULL)
     {
         LARGE_INTEGER li;
         li.QuadPart = _nsect * 512;
+
+        // Đặt vị trí con trỏ file tại vị trí "li"
         SetFilePointerEx(hFloppy, li, 0, FILE_BEGIN);
-        // Read the boot sector
+
+        // Đọc boot sector
         if (!ReadFile(hFloppy, DATA, 512, &dwBytesRead, NULL))
         {
-            printf("Error in reading floppy disk\n");
+            cerr << "Xay ra loi khi doc sector" << endl;
         }
 
         CloseHandle(hFloppy);
-        // Close the handle
     }
 }
 
@@ -80,16 +84,20 @@ int64_t getBytes(BYTE *sector, int offset, int number)
     return k;
 }
 
-// Chuyển "number" bytes DATA từ vị trí "offset" thành string
+// Chuyển số lượng bytes Data từ vị trí offset thành string
 string numToString(BYTE *DATA, int offset, int number)
 {
+    // tạo mảng tmp để lưu kí tự
     char *tmp = new char[number + 1];
     memcpy(tmp, DATA + offset, number);
     string s = "";
-    for (int i = 0; i < number; i++)
+
+    // chuyển mảng tmp thành string
+    for (int i = 0; i < number; ++i)
         if (tmp[i] != 0x00)
             s += tmp[i];
 
+    delete[] tmp;
     return s;
 }
 
@@ -108,21 +116,28 @@ string decimalToBinary(int n)
 // Đọc thông tin của entry $INFORMATION
 int readEntryInformation(BYTE *Entry, int start)
 {
+    // Byte thứ 0 đến 3, Type của attribute
     int status = getBytes(Entry, start + 56, 4);
+
+    // chuyển status sang hệ 2
     string bin = decimalToBinary(status);
+
+    // Kiểm tra các bits ở vị trí cuối cùng của status
     for (int i = bin.length() - 1; i >= 0; i--)
     {
         int n = bin.length();
+        // Nếu bit cuối cùng = 1 thì kiểm tra các bit khác
         if (bin[i] == '1')
         {
+            // Read Only
             if (i == n - 2)
             {
-                // Hidden
+                // Hệ thống tập tin không thể đọc
                 return -1;
             }
             if (i == n - 3)
             {
-                // File System
+                // Hệ thống tập tin không thể ghi
                 return -1;
             }
         }
@@ -131,8 +146,8 @@ int readEntryInformation(BYTE *Entry, int start)
 
     // Byte thứ 4 đến 7, Kích thước của attribute
     int size = getBytes(Entry, start + 4, 4);
-    cout << "\t- Length of attribute (include header): " << size << endl;
-    cout << "\t- Status Attribute of File: " << bin << endl;
+    cout << "\t- Do dai attribute (bao gom header): " << size << endl;
+    cout << "\t- Trang thai attribute: " << bin << endl;
     for (int i = bin.length() - 1; i >= 0; i--)
     {
         int n = bin.length();
@@ -150,7 +165,7 @@ int readEntryInformation(BYTE *Entry, int start)
     }
     cout << endl;
 
-    // trả về size của attribute
+    // Trả về size của attribute
     return size;
 }
 
@@ -159,16 +174,16 @@ int readEntryFileName(BYTE *Entry, int start, int ID)
 {
     cout << "Attribute $FILE_NAME" << endl;
     int size = getBytes(Entry, start + 4, 4);
-    cout << "\t- Length of attribute (include header): " << size << endl;
+    cout << "\t- Do dai attribute (bao gom header): " << size << endl;
     int parent_file = getBytes(Entry, start + 24, 6);
-    cout << "\t- Parent file: " << parent_file << endl;
+    cout << "\t- File cha: " << parent_file << endl;
 
     parentID.push_back(parent_file);
 
     int lengthName = getBytes(Entry, start + 88, 1);
-    cout << "\t- Length of name file: " << lengthName << endl;
+    cout << "\t- Do dai ten File: " << lengthName << endl;
     string name = numToString(Entry, start + 90, lengthName * 2);
-    cout << "\t- Name of file: " << name << endl;
+    cout << "\t- Ten File: " << name << endl;
 
     // Lấy đuôi mở rộng
     string exts = "";
@@ -205,9 +220,9 @@ void readEntryData(BYTE *Entry, int start)
 {
     cout << "Attribute $DATA" << endl;
     int size = getBytes(Entry, start + 4, 4);
-    cout << "\t- Length of attribute (include header): " << size << endl;
+    cout << "\t- Do dai attribute (bao gom header): " << size << endl;
     int sizeFile = getBytes(Entry, start + 16, 4);
-    cout << "\t- Size of file: " << sizeFile << endl;
+    cout << "\t- Kich thuoc File: " << sizeFile << endl;
 
     int type = getBytes(Entry, start + 8, 1);
     if (type == 0 && chk == true)
@@ -217,7 +232,7 @@ void readEntryData(BYTE *Entry, int start)
         int cont_Start = getBytes(Entry, start + 20, 2);
         string content = numToString(Entry, start + cont_Start, cont_Size);
         cout << endl;
-        cout << "Content: " << content << endl;
+        cout << "Noi dung: " << content << endl;
     }
     else
         cout << "\t\t=> Non-resident" << endl;
@@ -225,35 +240,35 @@ void readEntryData(BYTE *Entry, int start)
 }
 
 // Hàm in "tab" lần /t
-void print_Tab(int tab)
+void printTab(int tab)
 {
-    for (int i = 0; i < tab; i++)
+    for (int i = 0; i < tab; ++i)
         cout << "\t";
 }
 
 // lấy tên file trong mảng nameFile có ID file là "id"
 string getNameFile(int id)
 {
-    string kq = "";
-    // tìm vị trí xuất hiện của id trong fileID
-    int vt = -1;
-    for (int i = 0; i < fileID.size(); i++)
+    string res = "";
+    // Xác định index id trong fileID
+    int pos = -1;
+    for (int i = 0; i < fileID.size(); ++i)
         if (fileID[i] == id)
         {
-            vt = i;
+            pos = i;
             break;
         }
 
-    if (vt != -1)
-        kq = nameFile[vt];
-    return kq;
+    if (pos != -1)
+        res = nameFile[pos];
+    return res;
 }
 
 // Hàm đệ quy in ra cây thư mục
 void printFolderTree(int a, int tab, int vt)
 {
     tab++;
-    print_Tab(tab);
+    printTab(tab);
     cout << getNameFile(a) << endl;
 
     // cho ID với parents = -1
@@ -274,7 +289,7 @@ void printFolderTree(int a, int tab, int vt)
         return;
 
     // in ra những thằng con của từng phần tử trong child
-    for (int i = 0; i < child.size(); i++)
+    for (int i = 0; i < child.size(); ++i)
         printFolderTree(child[i], tab, VT[i]);
 }
 
@@ -347,6 +362,8 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
 
     // xử lí cây thư mục
     folderTree(len_MFT, MFTStart, disk);
+
+    delete MFT;
 }
 
 // xử lí cây thư mục
@@ -382,7 +399,8 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
                 }
                 else
                 {
-                    while (getBytes(currentEntry, startData, 4) != 128) // Tìm sector dấu hiệu của DATA
+                    // Tìm sector dấu hiệu của DATA
+                    while (getBytes(currentEntry, startData, 4) != 128)
                     {
                         startData += 4;
                     }
@@ -393,18 +411,19 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
                 fileID.push_back(ID);
             }
         }
+
         delete currentEntry;
     }
 
     // in ra cây thư mục
     cout << "---------------------------------------------------------" << endl;
-    cout << "\t \t \t CAY THU MUC" << endl;
-    for (int i = 0; i < fileID.size(); i++)
+    cout << "\t \t \t CAY THU MUC: " << endl;
+    for (int i = 0; i < fileID.size(); ++i)
         if (fileID[i] != -1 && parentID[i] != -1)
             printFolderTree(fileID[i], -1, i);
 }
 
-// In bảng ra sector
+// In bảng sector
 void printSector(BYTE *sector)
 {
     int count = 0;
@@ -413,8 +432,9 @@ void printSector(BYTE *sector)
     cout << "         0  1  2  3  4  5  6  7    8  9  A  B  C  D  E  F" << endl;
 
     cout << "0x0" << num << "0  ";
-    bool flag = 0;
-    for (int i = 0; i < 512; i++)
+
+    bool flag = false;
+    for (int i = 0; i < 512; ++i)
     {
         count++;
         if (i % 8 == 0)
@@ -422,7 +442,7 @@ void printSector(BYTE *sector)
         printf("%02X ", sector[i]);
         if (i == 255)
         {
-            flag = 1;
+            flag = true;
             num = 0;
         }
 
@@ -434,15 +454,15 @@ void printSector(BYTE *sector)
 
             cout << endl;
 
-            if (flag == 0)
+            if (!flag)
             {
-                num++;
+                ++num;
                 if (num < 10)
                     cout << "0x0" << num << "0  ";
                 else
                 {
-                    char hex = char(num - 10 + 'A');
-                    cout << "0x0" << hex << "0  ";
+                    char hexa = char(num - 10 + 'A');
+                    cout << "0x0" << hexa << "0  ";
                 }
             }
             else
@@ -451,14 +471,15 @@ void printSector(BYTE *sector)
                     cout << "0x1" << num << "0  ";
                 else
                 {
-                    char hex = char(num - 10 + 'A');
-                    cout << "0x1" << hex << "0  ";
+                    char hexa = char(num - 10 + 'A');
+                    cout << "0x1" << hexa << "0  ";
                 }
-                num++;
+                ++num;
             }
 
             count = 0;
         }
     }
+
     cout << endl;
 }
