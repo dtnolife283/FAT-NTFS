@@ -11,23 +11,23 @@ int main()
 
     // xử lí đọc
     BYTE *sector = new BYTE[512];
-    int flag = ReadSector(drive, 0, sector);
+    int flag = readSector(drive, 0, sector);
 
     // nếu đọc thành công
     if (flag == 1)
     {
         // in ra bảng sector vừa đọc
-        Print_Sector(sector);
+        printSector(sector);
 
         // Đọc Bios Parameter Block
-        Read_BPB(sector, drive);
+        readBPB(sector, drive);
 
         // giải phóng bộ nhớ
         delete[] sector;
     }
     else
     {
-        cout << "Doc khong thanh cong !!!" << endl;
+        cout << "Khong doc duoc" << endl;
         return 0;
     }
 }
