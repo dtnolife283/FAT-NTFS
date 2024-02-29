@@ -264,35 +264,6 @@ string getNameFile(int id)
     return res;
 }
 
-// In cây thư mục
-void printFolderTree(int id, int tab, int pos)
-{
-    tab++;
-    printTab(tab);
-    cout << getNameFile(id) << endl;
-
-    // Cho ID với parents = -1
-    fileID[pos] = -1;
-    parentID[pos] = -1;
-
-    vector<int> child;
-    vector<int> POS;
-    // Tìm số lượng con
-    for (int j = 0; j < fileID.size(); ++j)
-        if (parentID[j] == id)
-        {
-            child.push_back(fileID[j]);
-            POS.push_back(j);
-        }
-
-    if (child.size() == 0)
-        return;
-
-    // In con của từng phần tử
-    for (int i = 0; i < child.size(); ++i)
-        printFolderTree(child[i], tab, POS[i]);
-}
-
 // Đọc Bios Parameter Block
 void readBPB(BYTE *sector, LPCWSTR disk)
 {
@@ -491,31 +462,31 @@ void printSector(BYTE *sector)
     cout << endl;
 }
 
-// Hàm đệ quy in ra cây thư mục
-void printFolderTree(int a, int tab, int vt)
+// In cây thư mục
+void printFolderTree(int id, int tab, int pos)
 {
     tab++;
     printTab(tab);
-    cout << getNameFile(a) << endl;
+    cout << getNameFile(id) << endl;
 
-    // cho ID với parents = -1
-    fileID[vt] = -1;
-    parentID[vt] = -1;
+    // Cho ID với parents = -1
+    fileID[pos] = -1;
+    parentID[pos] = -1;
 
     vector<int> child;
-    vector<int> VT;
-    // tìm số lượng những thằng con của a
-    for (int j = 0; j < fileID.size(); j++)
-        if (parentID[j] == a)
+    vector<int> POS;
+    // Tìm số lượng con
+    for (int j = 0; j < fileID.size(); ++j)
+        if (parentID[j] == id)
         {
             child.push_back(fileID[j]);
-            VT.push_back(j);
+            POS.push_back(j);
         }
 
     if (child.size() == 0)
         return;
 
-    // in ra những thằng con của từng phần tử trong child
+    // In con của từng phần tử
     for (int i = 0; i < child.size(); ++i)
-        printFolderTree(child[i], tab, VT[i]);
+        printFolderTree(child[i], tab, POS[i]);
 }

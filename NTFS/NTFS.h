@@ -45,7 +45,7 @@ void printTab(int tab);
 string getNameFile(int id);
 
 // Hàm đệ quy in ra cây thư mục
-void printFolderTree(int a, int tab, int vt);
+void printFolderTree(int id, int tab, int pos);
 
 // Đọc Bios Parameter Block
 void readBPB(BYTE *sector, LPCWSTR disk);
