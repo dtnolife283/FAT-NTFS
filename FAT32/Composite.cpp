@@ -1,7 +1,5 @@
 #include "Composite.h"
 
-
-
 Item::Item(string name, uint32_t _size, uint32_t _startSector, bool _isSystem, bool _isHidden)
 {
     m_name = name;
@@ -18,7 +16,8 @@ std::string Item::getName()
 
 Item::~Item() {}
 
-File::File(string name, uint32_t _size, uint32_t _startSector, bool _isSystem, bool _isHidden, string _data) : Item (name, _size, _startSector, _isSystem, _isHidden) {
+File::File(string name, uint32_t _size, uint32_t _startSector, bool _isSystem, bool _isHidden, string _data) : Item(name, _size, _startSector, _isSystem, _isHidden)
+{
     data = _data;
 }
 
@@ -36,13 +35,17 @@ void File::print(int depth)
 {
     for (int i = 0; i < depth; i++)
     {
-        std::cout << "\t\t";
+        std::cout << "\t";
     }
-    std::cout << "File: " << this->m_name << " size: " << this->size << " Sector: " << startSector << std::endl;   // hiển thị tên, trạng thái (file/folder, là System hay Hidden nữa)
-    cout << "Data: " << data << "\n";   // này print thử test thôi nào sửa lại lúc tìm file thì mới print data
+    for (int i = 0; i < depth; i++)
+    {
+        std::cout << "+";
+    }
+    std::cout << "+ File: " << this->m_name << "; Size: " << this->size << "; Sector: " << startSector << std::endl; // hiển thị tên, trạng thái (file/folder, là System hay Hidden nữa)
+    // cout << "Data: " << data << "\n";                                                                              // này print thử test thôi nào sửa lại lúc tìm file thì mới print data
 }
 
-Folder::Folder(string name, uint32_t _startSector, bool _isSystem, bool _isHidden) : Item(name, 0, _startSector, _isSystem, _isHidden){}
+Folder::Folder(string name, uint32_t _startSector, bool _isSystem, bool _isHidden) : Item(name, 0, _startSector, _isSystem, _isHidden) {}
 
 int Folder::getSize()
 {
@@ -57,9 +60,13 @@ void Folder::print(int depth)
 {
     for (int i = 0; i < depth; i++)
     {
-        std::cout << "\t\t";
+        std::cout << "\t";
     }
-    std::cout << "Folder: " <<  this->m_name << " Size:" << this->getSize() << " Sector: " << startSector << std::endl;
+    for (int i = 0; i < depth; i++)
+    {
+        std::cout << "+";
+    }
+    std::cout << "+ Folder: " << this->m_name << "; Size: " << this->getSize() << "; Sector: " << startSector << std::endl;
 
     for (int i = 0; i < this->items.size(); i++)
     {
@@ -88,6 +95,7 @@ Item *Folder::removeByName(std::string name)
 
             if (item != nullptr)
             {
+                this->items.erase(this->items.begin() + i);
                 return item;
             }
         }
@@ -96,7 +104,7 @@ Item *Folder::removeByName(std::string name)
     return nullptr;
 }
 
-//chưa test
+// chưa test
 Item *Folder::findByName(std::string name)
 {
     for (int i = 0; i < this->items.size(); i++)
@@ -131,4 +139,3 @@ Folder::~Folder()
         delete this->items[i];
     }
 }
-
