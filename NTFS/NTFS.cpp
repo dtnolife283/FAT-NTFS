@@ -3,7 +3,7 @@
 vector<int> fileID;
 vector<int> parentID;
 vector<string> nameFile;
-bool chk = false;
+bool check = false; // Kiểm tra file có phải là file text không
 
 // Đọc sector từ ổ đĩa "drive" từ vị trí "readPoint" và lưu vào "sector"
 bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
@@ -208,7 +208,7 @@ int readEntryFileName(BYTE *Entry, int start, int ID)
         cout << "\t\t\t => Use Foxit PDF Reader or Web Browers (Edge, Chrome, ...) to open!\n";
 
     if (exts == "txt")
-        chk = true;
+        check = true;
     nameFile.push_back(name);
     cout << endl;
 
@@ -225,7 +225,7 @@ void readEntryData(BYTE *Entry, int start)
     cout << "\t- Kich thuoc File: " << sizeFile << endl;
 
     int type = getBytes(Entry, start + 8, 1);
-    if (type == 0 && chk == true)
+    if (type == 0 && check == true)
     {
         cout << "\t\t=> Resident" << endl;
         int cont_Size = getBytes(Entry, start + 16, 4);
@@ -350,7 +350,7 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
         readSect2(disk, currentEntry, currentSector);
         if (numToString(currentEntry, 0x00, 4) == "FILE")
         {
-            chk = false;
+            check = false;
             int ID = getBytes(currentEntry, 0x02C, 4);
             if (ID > 38)
             {
