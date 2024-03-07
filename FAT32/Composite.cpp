@@ -45,6 +45,21 @@ void File::print(int depth)
     // cout << "Data: " << data << "\n";                                                                              // này print thử test thôi nào sửa lại lúc tìm file thì mới print data
 }
 
+Item* File::findByName(std::string name){
+    if (this->m_name == name)
+        return this;
+    return nullptr;
+}
+
+bool File::removeByName(std::string name, bool& isFolder){
+    if (this->m_name == name){
+        delete this;
+        isFolder = false;
+        return true;
+    }
+    return false;
+}
+
 Folder::Folder(string name, uint32_t _startSector, bool _isSystem, bool _isHidden) : Item(name, 0, _startSector, _isSystem, _isHidden) {}
 
 int Folder::getSize()
@@ -79,29 +94,26 @@ void Folder::addItem(Item *item)
     this->items.push_back(item);
 }
 
-Item *Folder::removeByName(std::string name)
+bool Folder::removeByName(std::string name, bool& isFolder)
 {
     for (int i = 0; i < this->items.size(); i++)
     {
         if (this->items[i]->getName() == name)
         {
-            Item *item = this->items[i];
             this->items.erase(this->items.begin() + i);
-            return item;
+            isFolder = true;
+            return true;
         }
         else if (Folder *folder = dynamic_cast<Folder *>(this->items[i]))
         {
-            Item *item = folder->removeByName(name);
-
-            if (item != nullptr)
+            if (folder->removeByName(name, isFolder))
             {
-                this->items.erase(this->items.begin() + i);
-                return item;
+                return true;
             }
         }
     }
 
-    return nullptr;
+    return false;
 }
 
 // chưa test
@@ -116,14 +128,10 @@ Item *Folder::findByName(std::string name)
         else if (Folder *folder = dynamic_cast<Folder *>(this->items[i]))
         {
             Item *item = folder->findByName(name);
-
             if (item != nullptr)
-            {
                 return item;
-            }
         }
     }
-
     return nullptr;
 }
 
