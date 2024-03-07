@@ -51,10 +51,9 @@ Item* File::findByName(std::string name){
     return nullptr;
 }
 
-bool File::removeByName(std::string name, bool& isFolder){
+bool File::removeByName(std::string name){
     if (this->m_name == name){
         delete this;
-        isFolder = false;
         return true;
     }
     return false;
@@ -94,19 +93,18 @@ void Folder::addItem(Item *item)
     this->items.push_back(item);
 }
 
-bool Folder::removeByName(std::string name, bool& isFolder)
+bool Folder::removeByName(std::string name)
 {
     for (int i = 0; i < this->items.size(); i++)
     {
         if (this->items[i]->getName() == name)
         {
             this->items.erase(this->items.begin() + i);
-            isFolder = true;
             return true;
         }
         else if (Folder *folder = dynamic_cast<Folder *>(this->items[i]))
         {
-            if (folder->removeByName(name, isFolder))
+            if (folder->removeByName(name))
             {
                 return true;
             }

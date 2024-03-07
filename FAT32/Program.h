@@ -101,14 +101,16 @@ void Program::run()
                             break;
                     }
                     if (item != nullptr)
+                    {
+                        std::cout << "Item Found!" << std::endl;
                         item->print(0);
+                    }
                     else
-                        std::cout << "File not found!" << std::endl;
+                        std::cout << "Item not found!" << std::endl;
                 }
                 else
                 {
                     bool flag = false;
-                    bool isFolder = false;
                     for (int i = 0; i < data.size(); i++)
                     {
                         // delete folder
@@ -117,11 +119,10 @@ void Program::run()
                             delete data[i];
                             data.erase(data.begin() + i);
                             flag = true;
-                            isFolder = true;
                             break;
                         }
                         // delete item in folder
-                        if (data[i]->removeByName(name, isFolder))
+                        if (data[i]->removeByName(name))
                         {
                             flag = true;
                             break;
@@ -129,15 +130,12 @@ void Program::run()
                     }
                     if (flag)
                     {
-                        if (isFolder)
-                            std::cout << "Folder deleted!" << std::endl;
-                        else
-                            std::cout << "File deleted!" << std::endl;
+                        std::cout << "Item deleted!" << std::endl;
                         for (auto i : data)
                             i->print(0);
                     }
                     else
-                        std::cout << "File not found!" << std::endl;
+                        std::cout << "Item not found!" << std::endl;
                 }
             }
             std::cout << "Do you want to find or delete another file/folder? (f/d/n): ";
