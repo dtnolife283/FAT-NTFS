@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <algorithm>
+#include <cstdint>
 using namespace std;
 
 // Đọc sector từ ổ đĩa "drive" từ vị trí "readPoint" và lưu vào "sector"
