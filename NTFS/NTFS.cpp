@@ -8,7 +8,7 @@ bool check = false; // Kiểm tra file có phải là file text không
 // Đọc sector từ ổ đĩa "drive" từ vị trí "readPoint" và lưu vào "sector"
 bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
 {
-    DWORD bytesRead;      // lưu số byte đọc được từ ổ đĩa
+    DWORD bytesRead;      // lưu số bytes đọc được từ ổ đĩa
     HANDLE device = NULL; // lưu handle của ổ đĩa cần đọc
 
     // Mở ổ đĩa
@@ -26,7 +26,7 @@ bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
         return 0;
     }
 
-    // Đặt vị trí con trỏ file tại vị trí "readPoint"
+    // Đặt vị trí con trỏ file tại vị trí "readPoint" truyền vào bằng 0
     SetFilePointer(device, readPoint, NULL, FILE_BEGIN);
 
     // Đọc sector
@@ -45,72 +45,72 @@ bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
 }
 
 // Đọc "nsect" sector từ ổ đĩa "disk" từ vị trí "readPoint" và lưu vào "DATA"
-void readSect2(LPCWSTR disk, BYTE *&DATA, unsigned int _nsect)
+void readSector2(LPCWSTR disk, BYTE *&DATA, unsigned int _nsect)
 {
     DWORD dwBytesRead(0);
 
-    HANDLE hFloppy = NULL;
-    hFloppy = CreateFileW(disk, // Floppy drive cần mở
-                          GENERIC_READ,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          NULL,
-                          OPEN_EXISTING,
-                          0,
-                          NULL);
+    HANDLE hDisk = NULL;
+    hDisk = CreateFileW(disk, // Floppy drive cần mở
+                        GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
 
-    if (hFloppy != NULL)
+    if (hDisk != NULL)
     {
         LARGE_INTEGER li;
         li.QuadPart = _nsect * 512;
 
         // Đặt vị trí con trỏ file tại vị trí "li"
-        SetFilePointerEx(hFloppy, li, 0, FILE_BEGIN);
+        SetFilePointerEx(hDisk, li, 0, FILE_BEGIN);
 
         // Đọc boot sector
-        if (!ReadFile(hFloppy, DATA, 512, &dwBytesRead, NULL))
+        if (!ReadFile(hDisk, DATA, 512, &dwBytesRead, NULL))
         {
             cerr << "Xay ra loi khi doc sector" << endl;
         }
 
-        CloseHandle(hFloppy);
+        CloseHandle(hDisk);
     }
 }
 
 // Lấy number bytes từ vị trí offset
 int64_t getBytes(BYTE *sector, int offset, int number)
 {
-    int64_t k = 0;
-    memcpy(&k, sector + offset, number);
-    return k;
+    int64_t extractedBytesToInteger = 0;
+    memcpy(&extractedBytesToInteger, sector + offset, number);
+    return extractedBytesToInteger;
 }
 
 // Chuyển số lượng bytes Data từ vị trí offset thành string
 string numToString(BYTE *DATA, int offset, int number)
 {
-    // tạo mảng tmp để lưu kí tự
-    char *tmp = new char[number + 1];
-    memcpy(tmp, DATA + offset, number);
-    string s = "";
+    // tạo mảng temp để lưu kí tự
+    char *temp = new char[number + 1];
+    memcpy(temp, DATA + offset, number);
+    string result = "";
 
-    // chuyển mảng tmp thành string
+    // chuyển mảng temp thành string
     for (int i = 0; i < number; ++i)
-        if (tmp[i] != 0x00)
-            s += tmp[i];
+        if (temp[i] != 0x00)
+            result += temp[i];
 
-    delete[] tmp;
-    return s;
+    delete[] temp;
+    return result;
 }
 
 // Chuyển hệ 10 sang hệ 2
-string decimalToBinary(int n)
+string decimalToBinary(int number)
 {
-    string res = "";
-    while (n > 0)
+    string result = "";
+    while (number > 0)
     {
-        res = (n % 2 == 0 ? "0" : "1") + res;
-        n /= 2;
+        result = to_string(number % 2) + result;
+        number /= 2;
     }
-    return res;
+    return result;
 }
 
 // Đọc thông tin của entry $INFORMATION
@@ -197,15 +197,15 @@ int readEntryFileName(BYTE *Entry, int start, int ID)
 
     // Hỗ trợ đọc file
     if (exts == "doc" || exts == "docx")
-        cout << "\t\t\t => Use Microsoft Office Word to open!\n";
+        cout << "\t\t\t Su dung Microsoft Office Word de mo!\n";
     if (exts == "ppt" || exts == "pptx")
-        cout << "\t\t\t => Use Microsoft Office PowerPoint to open!\n";
+        cout << "\t\t\t Su dung Microsoft Office PowerPoint de mo!\n";
     if (exts == "xls" || exts == "xlsx")
-        cout << "\t\t\t => Use Microsoft Office Excel to open!\n";
+        cout << "\t\t\t Su dung Microsoft Office Excel de mo!\n";
     if (exts == "sln" || exts == "cpp" || exts == "java" || exts == "html" || exts == "css")
-        cout << "\t\t\t => Use Microsoft Visual Studio to open!\n";
+        cout << "\t\t\t Su dung Microsoft Visual Studio de mo!\n";
     if (exts == "pdf")
-        cout << "\t\t\t => Use Foxit PDF Reader or Web Browers (Edge, Chrome, ...) to open!\n";
+        cout << "\t\t\t Su dung Foxit PDF Reader hoac Trinh duyet Web (Edge, Chrome, ...) de mo!\n";
 
     if (exts == "txt")
         check = true;
@@ -291,7 +291,7 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
 {
     BYTE *MFT = new BYTE[512];
     MFTStart *= sectors_per_cluster;
-    readSect2(disk, MFT, MFTStart);
+    readSector2(disk, MFT, MFTStart);
 
     // INFORMATION
     int Entry_in4 = getBytes(MFT, 0x014, 2);
@@ -347,7 +347,7 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
         BYTE *currentEntry = new BYTE[512];
 
         // Đọc sector từ ổ đĩa disk từ vị trí currentSector lưu vào currentEntry
-        readSect2(disk, currentEntry, currentSector);
+        readSector2(disk, currentEntry, currentSector);
         if (numToString(currentEntry, 0x00, 4) == "FILE")
         {
             check = false;
