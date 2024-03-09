@@ -8,10 +8,10 @@ bool check = false; // Kiểm tra file có phải là file text không
 // Đọc sector từ ổ đĩa "drive" từ vị trí "readPoint" và lưu vào "sector"
 bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
 {
-    int retCode = 0;
-    DWORD bytesRead;
-    HANDLE device = NULL;
+    DWORD bytesRead;      // lưu số byte đọc được từ ổ đĩa
+    HANDLE device = NULL; // lưu handle của ổ đĩa cần đọc
 
+    // Mở ổ đĩa
     device = CreateFileW(drive,                              // Drive
                          GENERIC_READ,                       // Trạng thái truy cập
                          FILE_SHARE_READ | FILE_SHARE_WRITE, // Share Mode
@@ -22,7 +22,7 @@ bool readSector(LPCWSTR drive, int readPoint, BYTE *&sector)
 
     if (device == INVALID_HANDLE_VALUE) // Nếu không mở được file
     {
-        cerr << "CreateFile : " << GetLastError() << endl;
+        cerr << "CreateFile : " << GetLastError() << endl; // In ra lỗi và thoát chương trình
         return 0;
     }
 
@@ -243,7 +243,7 @@ void readEntryData(BYTE *Entry, int start)
 void printTab(int tab)
 {
     for (int i = 0; i < tab; ++i)
-        cout << "\t";
+        cout << "\t-";
 }
 
 // lấy tên file trong mảng nameFile có ID file là "id"
@@ -313,14 +313,14 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
     if (tmp == 64)
     {
         Entry_Data = Entry_Name + len_Name + getBytes(MFT, 0x10C, 4);
-        cout << "Attribute $DATA Entry starts at: " << Entry_Data << endl;
+        cout << "Attribute $DATA Entry bat dau tai: " << Entry_Data << endl;
         int len_data = getBytes(MFT, 0x134, 4);
         cout << "Do dai cua Data Entry: " << len_data << endl;
     }
     else
     {
         Entry_Data = Entry_Name + len_Name;
-        cout << "Attribute $DATA Entry starts at: " << Entry_Data << endl;
+        cout << "Attribute $DATA Entry bat dau tai: " << Entry_Data << endl;
         int len_data = getBytes(MFT, 0x10C, 4);
         cout << "Do dai cua Data Entry: " << len_data << endl;
     }
