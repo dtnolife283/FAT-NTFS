@@ -203,15 +203,15 @@ int readEntryFileName(BYTE *Entry, int start)
     // Hỗ trợ đọc file
     cout << "\t- Phan mo rong: " << extensions << endl;
     if (extensions == "doc" || extensions == "docx")
-        cout << "\t\t\t Su dung Microsoft Office Word de mo!\n";
+        cout << "\t\t Xin vui long su dung Microsoft Office Word de mo.\n";
     if (extensions == "ppt" || extensions == "pptx")
-        cout << "\t\t\t Su dung Microsoft Office PowerPoint de mo!\n";
+        cout << "\t\t Xin vui long Su dung Microsoft Office PowerPoint de mo\n";
     if (extensions == "xls" || extensions == "xlsx")
-        cout << "\t\t\t Su dung Microsoft Office Excel de mo!\n";
+        cout << "\t\t Xin vui long Su dung Microsoft Office Excel de mo\n";
     if (extensions == "sln" || extensions == "cpp" || extensions == "java" || extensions == "html" || extensions == "css")
-        cout << "\t\t\t Su dung Microsoft Visual Studio de mo!\n";
+        cout << "\t\t Xin vui long Su dung Microsoft Visual Studio de mo\n";
     if (extensions == "pdf")
-        cout << "\t\t\t Su dung Foxit PDF Reader hoac Trinh duyet Web (Edge, Chrome, ...) de mo!\n";
+        cout << "\t\t Xin vui long Su dung Foxit PDF Reader hoac Trinh duyet Web (Edge, Chrome, ...) de mo\n";
 
     if (extensions == "txt")
         check = true;
@@ -365,7 +365,6 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
             int ID = getBytes(currentEntry, 0x02C, 4);
             if (ID > 38) // ID > 38 là các file thực sự tồn tại trong ổ đĩa (có thể là file hoặc thư mục) còn lại là các file ảo (ví dụ: $MFT, $MFTMirr, ...)
             {
-                cout << endl;
                 cout << endl;
                 cout << "ID File: " << ID << endl;
                 int startInfor = getBytes(currentEntry, 0x014, 2);
