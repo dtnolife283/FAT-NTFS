@@ -4,16 +4,20 @@ string getNameMainEntry(vector<uint8_t>& data, uint32_t idx, bool isFolder){
     string result;
     vector<uint8_t> name;
     
+    // get the values of bytes that represent name
     for (int i = 0; i < 8; ++i){
         if (data[idx + i] == 0x20)
             continue;
         name.push_back(data[idx+i]);
     }
 
+    // convert it to string
     string Name = "";
     for (int i  = 0; i < name.size(); ++i)
         Name += (char)name[i];
     
+
+    // check its extension
     if (!isFolder){
         vector<uint8_t> extension;
         for (int i = 8; i < 11; ++i){
@@ -136,7 +140,7 @@ vector<Item* > Volume::TransRdet(vector<uint8_t>& data, bool flag, uint32_t star
         if (data[i] == 0xE5 || data[i + 11] == 0x0F)   // if this entry is deleted or sub entry
             continue;
 
-        if (data[i] == 0x00)
+        if (data[i] == 0x00)            // go through all entry
             break;
         
         // get offset
