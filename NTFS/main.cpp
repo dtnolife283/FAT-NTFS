@@ -30,13 +30,13 @@ int main()
 
             // Đọc Bios Parameter Block
             readBPB(sector, drive);
-
-            // Xóa mảng lưu sector
-            delete[] sector;
         }
         else
         {
             cout << "Dia chi nhap khong hop le hoac khong ton tai" << endl;
         }
+
+        // Xóa mảng lưu sector
+        delete[] sector;
     }
 }
