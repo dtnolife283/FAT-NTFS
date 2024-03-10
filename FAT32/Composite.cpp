@@ -41,8 +41,8 @@ void File::print(int depth)
     {
         std::cout << "+";
     }
-    std::cout << "+ File: " << this->m_name << "; Size: " << this->size << "; Sector: " << startSector << std::endl; // hiển thị tên, trạng thái (file/folder, là System hay Hidden nữa)
-    // cout << "Data: " << data << "\n";                                                                              // này print thử test thôi nào sửa lại lúc tìm file thì mới print data
+    std::cout << "+ File: " << this->m_name << "; Size: " << this->size << "; Sector: " << startSector << std::endl; 
+    cout << "Data: " << data << "\n";                                                                                
 }
 
 Item* File::findByName(std::string name){
@@ -114,7 +114,7 @@ bool Folder::removeByName(std::string name)
     return false;
 }
 
-// chưa test
+
 Item *Folder::findByName(std::string name)
 {
     for (int i = 0; i < this->items.size(); i++)
