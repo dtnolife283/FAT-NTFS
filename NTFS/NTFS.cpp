@@ -123,7 +123,7 @@ int readEntryInformation(BYTE *Entry, int start)
     string bin = decimalToBinary(status);
 
     // Kiểm tra các bits ở vị trí cuối cùng của status
-    for (int i = bin.length() - 1; i >= 0; i--)
+    for (int i = bin.length() - 1; i >= 0; --i)
     {
         int n = bin.length();
         // Nếu bit cuối cùng = 1 thì kiểm tra các bit khác
@@ -135,6 +135,7 @@ int readEntryInformation(BYTE *Entry, int start)
                 // Hệ thống tập tin không thể đọc
                 return -1;
             }
+            // Hidden file
             if (i == n - 3)
             {
                 // Hệ thống tập tin không thể ghi
@@ -148,8 +149,11 @@ int readEntryInformation(BYTE *Entry, int start)
     int size = getBytes(Entry, start + 4, 4);
     cout << "\t- Do dai attribute (bao gom header): " << size << endl;
     cout << "\t- Trang thai attribute: " << bin << endl;
-    for (int i = bin.length() - 1; i >= 0; i--)
+
+    // Duyệt qua các bit của status
+    for (int i = bin.length() - 1; i >= 0; --i)
     {
+        // Kiểm tra các bit cuối cùng của status
         int n = bin.length();
         if (bin[i] == '1')
         {
@@ -170,7 +174,7 @@ int readEntryInformation(BYTE *Entry, int start)
 }
 
 // Đọc thông tin của Attribute $FILE_NAME
-int readEntryFileName(BYTE *Entry, int start, int ID)
+int readEntryFileName(BYTE *Entry, int start)
 {
     cout << "Attribute $FILE_NAME" << endl;
     int size = getBytes(Entry, start + 4, 4);
@@ -180,34 +184,36 @@ int readEntryFileName(BYTE *Entry, int start, int ID)
 
     parentID.push_back(parent_file);
 
+    // Lấy tên file
     int lengthName = getBytes(Entry, start + 88, 1);
     cout << "\t- Do dai ten File: " << lengthName << endl;
     string name = numToString(Entry, start + 90, lengthName * 2);
     cout << "\t- Ten File: " << name << endl;
 
     // Lấy đuôi mở rộng
-    string exts = "";
+    string extensions = "";
     for (int i = name.length() - 1; i >= name.length() - 5; i--)
     {
         if (name[i] == '.')
             break;
-        exts += name[i];
+        extensions += name[i];
     }
-    reverse(exts.begin(), exts.end());
+    reverse(extensions.begin(), extensions.end());
 
     // Hỗ trợ đọc file
-    if (exts == "doc" || exts == "docx")
+    cout << "\t- Phan mo rong: " << extensions << endl;
+    if (extensions == "doc" || extensions == "docx")
         cout << "\t\t\t Su dung Microsoft Office Word de mo!\n";
-    if (exts == "ppt" || exts == "pptx")
+    if (extensions == "ppt" || extensions == "pptx")
         cout << "\t\t\t Su dung Microsoft Office PowerPoint de mo!\n";
-    if (exts == "xls" || exts == "xlsx")
+    if (extensions == "xls" || extensions == "xlsx")
         cout << "\t\t\t Su dung Microsoft Office Excel de mo!\n";
-    if (exts == "sln" || exts == "cpp" || exts == "java" || exts == "html" || exts == "css")
+    if (extensions == "sln" || extensions == "cpp" || extensions == "java" || extensions == "html" || extensions == "css")
         cout << "\t\t\t Su dung Microsoft Visual Studio de mo!\n";
-    if (exts == "pdf")
+    if (extensions == "pdf")
         cout << "\t\t\t Su dung Foxit PDF Reader hoac Trinh duyet Web (Edge, Chrome, ...) de mo!\n";
 
-    if (exts == "txt")
+    if (extensions == "txt")
         check = true;
     nameFile.push_back(name);
     cout << endl;
@@ -218,16 +224,19 @@ int readEntryFileName(BYTE *Entry, int start, int ID)
 // Đọc thông tin của Attribute $DATA
 void readEntryData(BYTE *Entry, int start)
 {
+    // In thông tin của attribute $DATA
     cout << "Attribute $DATA" << endl;
     int size = getBytes(Entry, start + 4, 4);
     cout << "\t- Do dai attribute (bao gom header): " << size << endl;
     int sizeFile = getBytes(Entry, start + 16, 4);
     cout << "\t- Kich thuoc File: " << sizeFile << endl;
 
+    // lấy kiểu của attribute
     int type = getBytes(Entry, start + 8, 1);
+    // Kiểm tra type của attribute
     if (type == 0 && check == true)
     {
-        cout << "\t\t=> Resident" << endl;
+        cout << "\t\t => Resident data:" << endl;
         int cont_Size = getBytes(Entry, start + 16, 4);
         int cont_Start = getBytes(Entry, start + 20, 2);
         string content = numToString(Entry, start + cont_Start, cont_Size);
@@ -235,7 +244,7 @@ void readEntryData(BYTE *Entry, int start)
         cout << "Noi dung: " << content << endl;
     }
     else
-        cout << "\t\t=> Non-resident" << endl;
+        cout << "\t\t=> Non-resident data" << endl;
     cout << endl;
 }
 
@@ -249,19 +258,19 @@ void printTab(int tab)
 // lấy tên file trong mảng nameFile có ID file là "id"
 string getNameFile(int id)
 {
-    string res = "";
+    string res = ""; // Khởi tạo res là chuỗi rỗng để lưu trữ tên file
     // Xác định index id trong fileID
-    int pos = -1;
-    for (int i = 0; i < fileID.size(); ++i)
-        if (fileID[i] == id)
+    int pos = -1;                           // Khởi tạo pos là -1, đại diện cho trường hợp không tìm thấy id trong fileID
+    for (int i = 0; i < fileID.size(); ++i) // Duyệt qua mảng fileID để tìm id
+        if (fileID[i] == id)                // Nếu tìm thấy id trong mảng fileID
         {
-            pos = i;
-            break;
+            pos = i; // Lưu lại vị trí của id trong fileID
+            break;   // Thoát khỏi vòng lặp
         }
 
-    if (pos != -1)
-        res = nameFile[pos];
-    return res;
+    if (pos != -1)           // Nếu pos khác -1 (tức là tìm thấy id trong fileID)
+        res = nameFile[pos]; // Gán tên file từ mảng nameFile tại vị trí pos vào res
+    return res;              // Trả về tên file
 }
 
 // Đọc Bios Parameter Block
@@ -294,44 +303,44 @@ void readMFT(unsigned int MFTStart, unsigned int sectors_per_cluster, LPCWSTR di
     readSector2(disk, MFT, MFTStart);
 
     // INFORMATION
-    int Entry_in4 = getBytes(MFT, 0x014, 2);
-    cout << "Attribute $INFORMATION Entry bat dau tai: " << Entry_in4 << endl;
+    int entryInformation = getBytes(MFT, 0x014, 2);
+    cout << "Attribute $INFORMATION Entry bat dau tai: " << entryInformation << endl;
 
-    int len_in4 = getBytes(MFT, 0x048, 4);
-    cout << "Do dai cua Infomation Entry: " << len_in4 << endl;
+    int informationLength = getBytes(MFT, 0x048, 4);
+    cout << "Do dai cua Infomation Entry: " << informationLength << endl;
 
     // FILE NAME
-    int Entry_Name = Entry_in4 + len_in4;
-    cout << "Attribute $FILE NAME Entry bat dau tai: " << Entry_Name << endl;
+    int entryName = entryInformation + informationLength;
+    cout << "Attribute $FILE NAME Entry bat dau tai: " << entryName << endl;
 
-    int len_Name = getBytes(MFT, 0x09C, 4);
-    cout << "Do dai cua $FILE NAME Entry: " << len_Name << endl;
+    int nameLength = getBytes(MFT, 0x09C, 4);
+    cout << "Do dai cua $FILE NAME Entry: " << nameLength << endl;
 
     // DATA
-    int tmp = getBytes(MFT, 0x108, 4);
-    int Entry_Data = 0;
-    if (tmp == 64)
+    int temp = getBytes(MFT, 0x108, 4);
+    int entryData;
+    if (temp == 64)
     {
-        Entry_Data = Entry_Name + len_Name + getBytes(MFT, 0x10C, 4);
-        cout << "Attribute $DATA Entry bat dau tai: " << Entry_Data << endl;
-        int len_data = getBytes(MFT, 0x134, 4);
-        cout << "Do dai cua Data Entry: " << len_data << endl;
+        entryData = entryName + nameLength + getBytes(MFT, 0x10C, 4);
+        cout << "Attribute $DATA Entry bat dau tai: " << entryData << endl;
+        int dataLength = getBytes(MFT, 0x134, 4);
+        cout << "Do dai cua Data Entry: " << dataLength << endl;
     }
     else
     {
-        Entry_Data = Entry_Name + len_Name;
-        cout << "Attribute $DATA Entry bat dau tai: " << Entry_Data << endl;
-        int len_data = getBytes(MFT, 0x10C, 4);
-        cout << "Do dai cua Data Entry: " << len_data << endl;
+        entryData = entryName + nameLength;
+        cout << "Attribute $DATA Entry bat dau tai: " << entryData << endl;
+        int dataLength = getBytes(MFT, 0x10C, 4);
+        cout << "Do dai cua Data Entry: " << dataLength << endl;
     }
 
     // main DATA
-    unsigned int len_MFT = MFTStart + (getBytes(MFT, Entry_Data + 24, 8) + 1) * 8;
-    cout << "So luong sector trong MFT: " << len_MFT - MFTStart << endl;
+    unsigned int MFTLength = MFTStart + (getBytes(MFT, entryData + 24, 8) + 1) * 8;
+    cout << "So luong sector trong MFT: " << MFTLength - MFTStart << endl;
     cout << endl;
 
     // xử lí cây thư mục
-    folderTree(len_MFT, MFTStart, disk);
+    folderTree(MFTLength, MFTStart, disk);
 
     delete[] MFT;
 }
@@ -348,11 +357,13 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
 
         // Đọc sector từ ổ đĩa disk từ vị trí currentSector lưu vào currentEntry
         readSector2(disk, currentEntry, currentSector);
+
+        // Kiểm tra xem có phải là FILE không
         if (numToString(currentEntry, 0x00, 4) == "FILE")
         {
             check = false;
             int ID = getBytes(currentEntry, 0x02C, 4);
-            if (ID > 38)
+            if (ID > 38) // ID > 38 là các file thực sự tồn tại trong ổ đĩa (có thể là file hoặc thư mục) còn lại là các file ảo (ví dụ: $MFT, $MFTMirr, ...)
             {
                 cout << endl;
                 cout << endl;
@@ -365,14 +376,15 @@ void folderTree(unsigned int len_MFT, unsigned int MFTStart, LPCWSTR disk)
                     continue;
                 }
 
+                // Đọc thông tin của FILE_NAME
                 int startName = sizeInfor + 56;
-                int sizeName = readEntryFileName(currentEntry, startName, ID);
+                int sizeName = readEntryFileName(currentEntry, startName);
                 int startData = startName + sizeName;
                 if (getBytes(currentEntry, startData, 4) == 64) // Nếu là $OBJECT
                 {
 
-                    int len_obj = getBytes(currentEntry, startData + 4, 4);
-                    startData += len_obj;
+                    int objectLength = getBytes(currentEntry, startData + 4, 4);
+                    startData += objectLength;
                     readEntryData(currentEntry, startData);
                 }
                 else
@@ -406,12 +418,12 @@ void printSector(BYTE *sector)
 {
     int count = 0;
     int num = 0;
+    bool flag = false;
 
     cout << "         0  1  2  3  4  5  6  7    8  9  A  B  C  D  E  F" << endl;
 
     cout << "0x0" << num << "0  ";
 
-    bool flag = false;
     for (int i = 0; i < 512; ++i)
     {
         count++;
