@@ -24,8 +24,8 @@ void Program::run()
 
     // Information about students
     string students[] = {"Tran Dang Tuan", "Nguyen Phuoc Sang", "Cao Minh Quang", "Ngo Tan Tai"};
-    string studentIDs[] = {"22127438", "12345678", "22127353", "34567890"};
-    string className = "22CLC2";
+    string studentIDs[] = {"22127438", "22127362", "22127353", "22127371"};
+    string className = "22CLC02";
 
     // Display student information
     cout << "Students:" << endl;
