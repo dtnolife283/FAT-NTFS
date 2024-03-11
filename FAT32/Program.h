@@ -73,7 +73,7 @@ void Program::run()
 
         // Option to find or delete file
         char opt;
-        cout << "Do you want to find or delete a file/folder? (f/d/n): ";
+        cout << "Do you want to find a file/folder? (f/n): ";
         cin >> opt;
         do
         {
@@ -82,10 +82,10 @@ void Program::run()
             std::string name;
             if (opt != 'n' && opt != 'N')
             {
-                std::cout << "Enter name: ";
-                cin >> name;
                 if (opt == 'f' || opt == 'F')
                 {
+                    std::cout << "Enter name: ";
+                    cin >> name;
                     Item *item = nullptr;
                     for (int i = 0; i < data.size(); i++)
                     {
@@ -110,35 +110,10 @@ void Program::run()
                 }
                 else
                 {
-                    bool flag = false;
-                    for (int i = 0; i < data.size(); i++)
-                    {
-                        // delete folder
-                        if (data[i]->getName() == name)
-                        {
-                            delete data[i];
-                            data.erase(data.begin() + i);
-                            flag = true;
-                            break;
-                        }
-                        // delete item in folder
-                        if (data[i]->removeByName(name))
-                        {
-                            flag = true;
-                            break;
-                        }
-                    }
-                    if (flag)
-                    {
-                        std::cout << "Item deleted!" << std::endl;
-                        for (auto i : data)
-                            i->print(0);
-                    }
-                    else
-                        std::cout << "Item not found!" << std::endl;
+                    std::cout << "Invalid option! Please input again. (f/n)" << std::endl;
                 }
             }
-            std::cout << "Do you want to find or delete another file/folder? (f/d/n): ";
+            std::cout << "Do you want to find another file/folder? (f/n): ";
             cin >> opt;
         } while (opt != 'n' && opt != 'N');
 

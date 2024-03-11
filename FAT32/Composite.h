@@ -23,7 +23,6 @@ public:
     virtual void print(int depth) = 0;
     virtual bool isFolder() = 0;
     virtual ~Item() = 0;
-    virtual bool removeByName(std::string name) = 0;
     virtual Item *findByName(std::string name) = 0;
 };
 
@@ -36,7 +35,6 @@ public:
     int getSize();
     void print(int depth);
     bool isFolder();
-    bool removeByName(std::string name);
     Item *findByName(std::string name);
 };
 
@@ -50,7 +48,6 @@ public:
     int getSize();
     void print(int depth);
     void addItem(Item *item);
-    bool removeByName(std::string name);
     Item *findByName(std::string name);
     bool isFolder();
     ~Folder();
