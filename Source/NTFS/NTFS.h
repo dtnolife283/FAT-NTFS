@@ -6,7 +6,6 @@
 #include <windows.h>
 #include <iomanip>
 #include <sstream>
-#include <map>
 #include <string>
 #include <algorithm>
 #include <cstdint>
@@ -21,7 +20,7 @@ void readSect2(LPCWSTR disk, BYTE *&DATA, unsigned int _nsect);
 // Lấy số lượng bytes từ vị trí offset của sector lưu vào Data
 int64_t getBytes(BYTE *sector, int offset, int number);
 
-// Đọc Bios Parasmeter Block
+// Đọc Bios Parameter Block
 void readBPB(BYTE *sector, LPCWSTR disk);
 
 // Chuyển số lượng bytes Data từ vị trí offset thành string
